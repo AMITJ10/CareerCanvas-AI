@@ -152,7 +152,8 @@ def save_parsed_text(original_file_path: str, text: str) -> None:
 # resume_parser.py
 import io
 from typing import Optional
-from PyPDF2 import PdfReader
++ from pypdf import PdfReader
+
 
 def extract_text_from_pdf(file_bytes: bytes) -> Optional[str]:
     """
@@ -169,3 +170,4 @@ def extract_text_from_pdf(file_bytes: bytes) -> Optional[str]:
     except Exception as e:
         print(f"[ERROR] Failed to extract text from PDF: {e}")
         return None
+
