@@ -1,0 +1,12 @@
+{
+  "users": {
+    "www.amitjadhav7383@gmail.com": {
+      "email": "www.amitjadhav7383@gmail.com",
+      "name": "Amit",
+      "provider": "email",
+      "role": "user",
+      "created_at": "2025-08-17T21:06:09.512645Z",
+      "password": "932b6d55829344268cef261c4f9c266b$e56dcaf5496b4ae2dbec4069bd5d74102523b6e2515f8170c46cd744859c544f"
+    }
+  }
+}
