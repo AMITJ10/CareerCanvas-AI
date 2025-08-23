@@ -695,7 +695,7 @@ def render_auth_landing():
 <div class="site-title">
   <div style="font-size:40px">🧭</div>
   <div style="text-align:center">
-    <h1>CVCompass AI</h1>
+    <h1>CareerCanvas  AI</h1>
     <small>Career Assistant</small>
   </div>
 </div>
@@ -780,7 +780,7 @@ def render_auth_landing():
     st.markdown(
         f"""
 <div class="site-info">
-  © {datetime.now().year} CVCompass AI — Build ATS-friendly resumes, analyze your CV, and prepare for interviews with AI.
+  © {datetime.now().year} CareerCanvas  AI — Build ATS-friendly resumes, analyze your CV, and prepare for interviews with AI.
 </div>
 """,
         unsafe_allow_html=True,
@@ -790,7 +790,7 @@ def render_auth_landing():
 # ==================== Sidebar & Navigation ====================
 def render_app_sidebar():
     with st.sidebar:
-        st.markdown('<div class="sidebar-logo"><h2>🧭 CVCompass AI</h2></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-logo"><h2>🧭 CareerCanvas  AI</h2></div>', unsafe_allow_html=True)
 
         ui = st.session_state.get("user_info") or {}
         if ui:
@@ -864,7 +864,7 @@ def _close_template_modal():
 # ==================== Pages ====================
 def page_dashboard():
     st.markdown(
-        '<div class="card">Welcome to CVCompass AI. Use the sidebar to explore Templates, Builder, and Analyzer.</div>',
+        '<div class="card">Welcome to CareerCanvas  AI. Use the sidebar to explore Templates, Builder, and Analyzer.</div>',
         unsafe_allow_html=True
     )
 
@@ -1008,7 +1008,7 @@ def page_builder():
                 for k, v in st.session_state.items():
                     if any(k.startswith(p) for p in ("contact_", "work_", "edu_", "skill_", "summary_", "builder_")) and isinstance(v, str):
                         text_resume += f"{k}: {v}\n"
-                pdf_bytes = text_to_pdf_bytes("CVCompass Resume", text_resume)
+                pdf_bytes = text_to_pdf_bytes("CareerCanvas  Resume", text_resume)
             st.download_button(
                 "Download Resume (PDF)",
                 data=pdf_bytes,
@@ -1180,7 +1180,7 @@ def run():
 <div class="site-title">
   <div style="font-size:34px">🧭</div>
   <div style="text-align:center">
-    <h1 style="font-size:38px">CVCompass AI</h1>
+    <h1 style="font-size:38px">CareerCanvas  AI</h1>
     <small>Career Assistant</small>
   </div>
 </div>
@@ -1209,7 +1209,7 @@ def run():
     st.markdown(
         f"""
 <div class="site-info">
-  © {datetime.now().year} CVCompass AI — Build ATS-friendly resumes, analyze your CV, and prepare for interviews with AI.
+  © {datetime.now().year} CareerCanvas  AI — Build ATS-friendly resumes, analyze your CV, and prepare for interviews with AI.
 </div>
 """,
         unsafe_allow_html=True,
@@ -1219,3 +1219,4 @@ def run():
 if __name__ == "__main__":
 
     run()
+
