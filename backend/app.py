@@ -38,7 +38,7 @@ from resume_parser import parse_resume
 
 # ==================== Page & Styles ====================
 st.set_page_config(
-    page_title="CVCompass AI - Career Assistant",
+    page_title="CareerCanvas AI - Career Assistant",
     layout="wide",
     page_icon="🧭",
     initial_sidebar_state="expanded",
@@ -1217,4 +1217,5 @@ def run():
 
 
 if __name__ == "__main__":
+
     run()
