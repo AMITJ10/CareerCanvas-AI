@@ -2,7 +2,10 @@
 # Builder with LHS form + RHS live preview (properly scaled and fitted). No Download/Reset here (handled in app.py).
 
 import streamlit as st
-from resume_templates import get_template_preview, get_template_with_content  # ⬅️ added
+from resume_templates import get_template_preview, get_template_with_content, get_template_by_id
+import base64
+import io
+from PIL import Image
 
 def _assemble_html_from_state(template_id: str) -> str:
     """Create a properly formatted resume HTML using session state fields with better template fitting."""
@@ -87,18 +90,40 @@ def create_resume_builder_interface():
         st.info("Select a template from the Templates page to start building your resume.")
         return
 
-    # Initialize once with the EXACT template HTML chosen on Templates page
-    if not st.session_state.get("initialized_from_template_html"):
-        try:
-            st.session_state["resume_html"] = get_template_with_content(template_id)
-        except Exception:
-            st.session_state["resume_html"] = get_template_preview(template_id)
-        st.session_state["initialized_from_template_html"] = True  # ⬅️ one-time init
+    # Use the exact template HTML passed from Templates page
+    if "builder_template_html" in st.session_state:
+        current_html = st.session_state["builder_template_html"]
+    else:
+        # Fallback to template preview if no HTML was passed
+        current_html = get_template_preview(template_id)
+        st.session_state["builder_template_html"] = current_html
+
+    # Check if template has image slot
+    template = get_template_by_id(template_id)
+    has_image_slot = template and template.get("has_image_slot", False)
 
     col_form, col_prev = st.columns([0.8,0.7 ], gap="large")
 
     with col_form:
         st.markdown("### ✏️ Fill Your Details")
+        
+        # Photo upload for templates with image slots
+        if has_image_slot:
+            st.markdown("#### 📷 Profile Photo")
+            uploaded_photo = st.file_uploader("Upload profile photo", type=["png", "jpg", "jpeg", "webp"], key="photo_upload")
+            if uploaded_photo:
+                try:
+                    img = Image.open(uploaded_photo).convert("RGB")
+                    bio = io.BytesIO()
+                    img.save(bio, format="PNG")
+                    data_uri = "data:image/png;base64," + base64.b64encode(bio.getvalue()).decode()
+                    
+                    # Replace photo placeholder in HTML
+                    updated_html = st.session_state["builder_template_html"].replace("{{PHOTO_URL}}", data_uri)
+                    st.session_state["builder_template_html"] = updated_html
+                    st.success("Photo uploaded successfully!")
+                except Exception as e:
+                    st.error(f"Error uploading photo: {e}")
 
         # Contact Information
         st.markdown("#### 📞 Contact Information")
@@ -155,18 +180,20 @@ def create_resume_builder_interface():
         )
 
         # As user types, assemble a fresh HTML (keeps your existing behavior)
-        st.session_state["resume_html"] = _assemble_html_from_state(template_id)
+        # Only update if no builder_template_html exists or user is actively editing
+        if "builder_template_html" not in st.session_state:
+            st.session_state["builder_template_html"] = _assemble_html_from_state(template_id)
 
     with col_prev:
         st.markdown("### 👀 Live Preview")
 
-        html_fragment = st.session_state.get("resume_html") or _assemble_html_from_state(template_id)
+        html_fragment = st.session_state.get("builder_template_html") or _assemble_html_from_state(template_id)
 
         st.markdown(
     f"""
 <div class="preview-viewport" style="max-width: 100%; margin: 0 auto;">
   <div class="preview-scale" style="transform: scale(0.75); transform-origin: left center; width: 740px; margin: 0 auto;">
-    <div class="pdf" style="width: 650px; height: 923px; background: #000; color: #111; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.35); overflow: hidden;">
+    <div class="pdf" style="width: 650px; height: 923px; background: #fff; color: #111; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.35); overflow: hidden;">
       {html_fragment}
     </div>
   </div>
