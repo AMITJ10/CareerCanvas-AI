@@ -2,6 +2,7 @@
 # Builder with LHS form + RHS live preview (properly scaled and fitted). No Download/Reset here (handled in app.py).
 
 import streamlit as st
+import streamlit.components.v1 as components
 from resume_templates import get_template_preview, get_template_with_content, get_template_by_id
 import base64
 import io
@@ -37,7 +38,7 @@ def _assemble_html_from_state(template_id: str) -> str:
                 line = '• ' + line
             exp_bullets += f"<li>{line[2:] if line.startswith(('• ', '- ')) else line}</li>"
 
-    # A compact, ATS-safe generic layout (kept from your previous file)
+    # A compact, ATS-safe generic layout
     filled = f"""
 <div style="font-family:Inter,Arial,sans-serif; line-height:1.6; color:#333; padding:40px 50px;">
   <div style="text-align:center; margin-bottom:30px; border-bottom:2px solid #2563eb; padding-bottom:20px;">
@@ -52,14 +53,13 @@ def _assemble_html_from_state(template_id: str) -> str:
   </div>
 
   <div style="margin-bottom:25px;">
-    <h2 style="color:#1e40af; border-bottom:1px solid #e5e7eb; padding-bottom:5px; font-size:18px;">PROFESSIONAL EXPERIENCE</h2>
-    <div style="margin-bottom:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0; font-size:16px; color:#2d3748;">{exp_role}</h3>
-        <span style="color:#666; font-size:14px;">{exp_duration}</span>
+    <h2 style="color:#1e40af; border-bottom:1px solid #e5e7eb; padding-bottom:5px; font-size:18px;">EXPERIENCE</h2>
+    <div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+        <div style="font-weight:600; color:#2d3748;">{exp_role} — {exp_company}</div>
+        <div style="color:#666;">{exp_duration}</div>
       </div>
-      <div style="font-weight:600; color:#555; margin:2px 0 10px 0;">{exp_company}</div>
-      <ul style="margin:5px 0; padding-left:20px;">{exp_bullets}</ul>
+      <ul style="margin:6px 0 0 18px; color:#4a5568;">{exp_bullets}</ul>
     </div>
   </div>
 
@@ -91,7 +91,7 @@ def create_resume_builder_interface():
         return
 
     # Use the exact template HTML passed from Templates page
-    if "builder_template_html" in st.session_state:
+    if "builder_template_html" in st.session_state and st.session_state["builder_template_html"]:
         current_html = st.session_state["builder_template_html"]
     else:
         # Fallback to template preview if no HTML was passed
@@ -102,7 +102,7 @@ def create_resume_builder_interface():
     template = get_template_by_id(template_id)
     has_image_slot = template and template.get("has_image_slot", False)
 
-    col_form, col_prev = st.columns([0.8,0.7 ], gap="large")
+    col_form, col_prev = st.columns([0.8, 0.7], gap="large")
 
     with col_form:
         st.markdown("### ✏️ Fill Your Details")
@@ -179,28 +179,18 @@ def create_resume_builder_interface():
             ),
         )
 
-        # As user types, assemble a fresh HTML (keeps your existing behavior)
-        # Only update if no builder_template_html exists or user is actively editing
-        if "builder_template_html" not in st.session_state:
+        # Initialize builder HTML if needed
+        if "builder_template_html" not in st.session_state or not st.session_state["builder_template_html"]:
             st.session_state["builder_template_html"] = _assemble_html_from_state(template_id)
 
     with col_prev:
         st.markdown("### 👀 Live Preview")
 
-        html_fragment = st.session_state.get("builder_template_html") or _assemble_html_from_state(template_id)
+        html_doc = st.session_state.get("builder_template_html") or _assemble_html_from_state(template_id)
 
-        st.markdown(
-    f"""
-<div class="preview-viewport" style="max-width: 100%; margin: 0 auto;">
-  <div class="preview-scale" style="transform: scale(0.75); transform-origin: left center; width: 740px; margin: 0 auto;">
-    <div class="pdf" style="width: 650px; height: 923px; background: #fff; color: #111; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.35); overflow: hidden;">
-      {html_fragment}
-    </div>
-  </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
+        # Render the resume correctly (not as raw HTML text) and fit inside preview container
+        # Use components.html so full HTML documents render properly
+        components.html(html_doc, height=980, scrolling=True)
 
         template_info = st.session_state.get('selected_template', 'Unknown')
         st.caption(f"📋 Template: {template_info}")
