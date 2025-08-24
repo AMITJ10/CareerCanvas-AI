@@ -731,11 +731,14 @@ def page_interview_prep():
                     guide_md = advisor.interview_prep_general(role, seniority, company_type)
 
                 st.markdown("### 📋 Your Interview Guide (AI-generated)")
-                st.markdown(f'<div class="card" style="line-height:1.6">{guide_md}</div>', unsafe_allow_html=True)
+                # Render as Markdown (fixes the “**...** =====” formatting)
+                with st.container():
+                    st.markdown(guide_md, unsafe_allow_html=False)
 
                 roadmap_md = advisor.stage_roadmap(role, seniority, company_type)
                 st.markdown("### 🛣️ Role Roadmap (AI-generated)")
-                st.markdown(f'<div class="card" style="line-height:1.6">{roadmap_md}</div>', unsafe_allow_html=True)
+                with st.container():
+                    st.markdown(roadmap_md, unsafe_allow_html=False)
 
                 pdf_bytes = text_to_pdf_bytes(f"{role} Interview Guide", _strip_md(guide_md))
                 st.download_button(
@@ -762,10 +765,11 @@ def _strip_md(md: str) -> str:
     for line in (md or "").splitlines():
         line = line.replace("**", "")
         if line.startswith("#"):
-            line = line.lstrip("# ").upper()
+            line = line.strip("# ").upper()
         line = line.replace("•", "- ")
         lines.append(line)
     return "\n".join(lines)
+
 
 
 # ==================== Footer Pages (internal) ====================
@@ -934,3 +938,4 @@ def run():
 
 if __name__ == "__main__":
     run()
+
