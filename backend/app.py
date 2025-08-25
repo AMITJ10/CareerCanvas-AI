@@ -25,7 +25,7 @@ from auth import (
 )
 
 # ---- App modules
-from resume_templates import get_all_templates, get_template_by_id, get_template_preview
+from resume_templates import TEMPLATES, get_template_by_id, get_template_preview
 from resume_builder import create_resume_builder_interface
 from career_advisor import CareerAdvisor
 from resume_parser import parse_resume
@@ -36,199 +36,553 @@ st.set_page_config(
     page_title="CareerCanvas AI - Career Assistant",
     layout="wide",
     page_icon="🎨",
-    initial_sidebar_state="collapsed",  # collapsed on first load
+    initial_sidebar_state="expanded",
 )
 
-# Global CSS (also hides Streamlit's built-in multipage nav permanently)
 st.markdown(
     """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root{
-  --primary:#4f46e5; --primary-light:#6366f1; --primary-dark:#3730a3; --primary-glow:#8b5cf6;
-  --secondary:#06b6d4; --secondary-light:#22d3ee; --secondary-dark:#0891b2;
-  --accent:#f59e0b; --accent-light:#fbbf24; --success:#10b981; --warning:#f59e0b; --error:#ef4444;
-  --bg-primary:#0f172a; --bg-secondary:#1e293b; --bg-tertiary:#334155;
-  --bg-card:rgba(30,41,59,.8); --bg-glass:rgba(51,65,85,.15); --bg-glass-strong:rgba(51,65,85,.25);
-  --text-primary:#f8fafc; --text-secondary:#cbd5e1; --text-muted:#94a3b8; --text-accent:#e2e8f0;
-  --border-primary:rgba(148,163,184,.2); --border-secondary:rgba(148,163,184,.1); --border-accent:rgba(79,70,229,.3);
-  --shadow-sm:0 2px 8px rgba(0,0,0,.12); --shadow-md:0 8px 25px rgba(0,0,0,.15); --shadow-lg:0 15px 35px rgba(0,0,0,.2); --shadow-glow:0 0 30px rgba(79,70,229,.15);
-  --gradient-primary:linear-gradient(135deg,var(--primary) 0%,var(--primary-glow) 100%);
-  --gradient-secondary:linear-gradient(135deg,var(--secondary) 0%,var(--secondary-light) 100%);
-  --gradient-bg:linear-gradient(135deg,var(--bg-primary) 0%,var(--bg-secondary) 50%,var(--bg-primary) 100%);
-  --gradient-card:linear-gradient(145deg,rgba(30,41,59,.9) 0%,rgba(51,65,85,.8) 100%);
-  --transition-smooth:all .3s cubic-bezier(.4,0,.2,1); --transition-fast:all .15s ease-out;
+  /* Enhanced Color Palette */
+  --primary: #4f46e5;
+  --primary-light: #6366f1;
+  --primary-dark: #3730a3;
+  --primary-glow: #8b5cf6;
+  
+  --secondary: #06b6d4;
+  --secondary-light: #22d3ee;
+  --secondary-dark: #0891b2;
+  
+  --accent: #f59e0b;
+  --accent-light: #fbbf24;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  
+  /* Modern Background System */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: rgba(30, 41, 59, 0.8);
+  --bg-glass: rgba(51, 65, 85, 0.15);
+  --bg-glass-strong: rgba(51, 65, 85, 0.25);
+  
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-accent: #e2e8f0;
+  
+  /* Interactive Elements */
+  --border-primary: rgba(148, 163, 184, 0.2);
+  --border-secondary: rgba(148, 163, 184, 0.1);
+  --border-accent: rgba(79, 70, 229, 0.3);
+  
+  /* Shadows & Effects */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 30px rgba(79, 70, 229, 0.15);
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
+  --gradient-bg: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+  --gradient-card: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.8) 100%);
+  
+  /* Transitions */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s ease-out;
 }
 
 html, body, [data-testid="stAppViewContainer"]{
-  background:var(--gradient-bg)!important; color:var(--text-primary)!important;
-  font-family:'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif!important;
-  font-weight:400; line-height:1.6;
+  background: var(--gradient-bg) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif !important;
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 /* Remove Streamlit branding */
-#MainMenu, header, footer, .stDeployButton { display:none!important; }
-h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display:none!important; }
+#MainMenu, header, footer, .stDeployButton { display: none !important; }
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 
-.block-container{ padding-top:1rem; padding-bottom:1rem; max-width:1400px; }
+.block-container{ 
+  padding-top: 1rem; 
+  padding-bottom: 1rem; 
+  max-width: 1400px;
+}
 
-/* Site Header */
+/* Enhanced Site Header */
 .site-title{
-  display:flex; align-items:center; justify-content:center; gap:16px;
-  margin:0 0 24px 0; padding:20px 0; background:var(--gradient-card);
-  border-radius:16px; border:1px solid var(--border-primary);
-  box-shadow:var(--shadow-md); backdrop-filter:blur(10px);
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 16px;
+  margin: 0 0 24px 0; 
+  padding: 20px 0;
+  background: var(--gradient-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
 }
+
 .site-title h1{
-  margin:0; font-size:48px; font-weight:800; letter-spacing:-.02em; font-family:'Space Grotesk',sans-serif;
-  background:linear-gradient(135deg,#a5b4fc 0%,#c7d2fe 25%,#e0e7ff 50%,#c7d2fe 75%,#a5b4fc 100%);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-  animation:shimmer 3s ease-in-out infinite;
+  margin: 0; 
+  font-size: 48px; 
+  font-weight: 800; 
+  letter-spacing: -0.02em;
+  font-family: 'Space Grotesk', sans-serif;
+  background: linear-gradient(135deg, #a5b4fc 0%, #c7d2fe 25%, #e0e7ff  50%, #c7d2fe 75%, #a5b4fc 100%);
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s ease-in-out infinite;
 }
-@keyframes shimmer { 0%,100%{background-position:-200% center;} 50%{background-position:200% center;} }
-.site-title small{ color:var(--text-secondary); letter-spacing:2px; text-transform:uppercase; font-weight:500; font-size:14px; }
 
-/* Typography */
-h1,h2,h3,h4,h5,h6{ color:var(--text-primary)!important; font-family:'Space Grotesk',sans-serif; font-weight:600; line-height:1.2; }
-p,li,span,label{ color:var(--text-primary)!important; }
-small,.muted{ color:var(--text-muted)!important; }
+@keyframes shimmer {
+  0%, 100% { background-position: -200% center; }
+  50% { background-position: 200% center; }
+}
 
-/* Links */
-a{ color:var(--secondary-light)!important; text-decoration:none; transition:var(--transition-fast); position:relative; }
-a:hover{ color:var(--secondary)!important; }
-a::after{ content:''; position:absolute; width:0; height:2px; bottom:-2px; left:0; background:var(--gradient-secondary); transition:var(--transition-smooth); }
-a:hover::after{ width:100%; }
+.site-title small{ 
+  color: var(--text-secondary); 
+  letter-spacing: 2px; 
+  text-transform: uppercase; 
+  font-weight: 500;
+  font-size: 14px;
+}
 
-/* Cards */
+/* Typography Enhancements */
+h1, h2, h3, h4, h5, h6 { 
+  color: var(--text-primary) !important; 
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+p, li, span, label { color: var(--text-primary) !important; }
+small, .muted { color: var(--text-muted) !important; }
+
+/* Enhanced Links */
+a { 
+  color: var(--secondary-light) !important; 
+  text-decoration: none;
+  transition: var(--transition-fast);
+  position: relative;
+}
+a:hover { 
+  color: var(--secondary) !important; 
+  text-decoration: none;
+}
+a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: var(--gradient-secondary);
+  transition: var(--transition-smooth);
+}
+a:hover::after {
+  width: 100%;
+}
+
+/* Modern Card System */
 .card{
-  background:var(--gradient-card); border:1px solid var(--border-primary); border-radius:16px; padding:20px;
-  box-shadow:var(--shadow-md); backdrop-filter:blur(12px); transition:var(--transition-smooth); position:relative; overflow:hidden;
+  background: var(--gradient-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
 }
-.card::before{ content:''; position:absolute; top:0; left:0; right:0; height:1px;
-  background:linear-gradient(90deg,transparent,rgba(148,163,184,.3),transparent); }
-.card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg),var(--shadow-glow); border-color:var(--border-accent); }
 
-/* Inputs */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.3), transparent);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  border-color: var(--border-accent);
+}
+
+/* Enhanced Input System */
 .stTextInput > div > div > input,
 .stTextArea textarea,
 .stSelectbox > div > div > select{
-  background:rgba(15,23,42,.8)!important; color:var(--text-primary)!important; border:2px solid var(--border-primary)!important;
-  border-radius:12px!important; padding:12px 16px!important; font-size:14px!important; font-weight:500!important; transition:var(--transition-smooth)!important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--border-primary) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: var(--transition-smooth) !important;
 }
+
 .stTextInput > div > div > input:focus,
-.stTextArea textarea:focus{ border-color:var(--primary)!important; box-shadow:0 0 0 3px rgba(79,70,229,.1)!important; outline:none!important; }
+.stTextArea textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+  outline: none !important;
+}
+
 .stTextInput > div > div > input::placeholder,
-.stTextArea textarea::placeholder{ color:var(--text-muted)!important; font-weight:400!important; }
+.stTextArea textarea::placeholder { 
+  color: var(--text-muted) !important; 
+  font-weight: 400 !important;
+}
 
-/* Select menu */
-div[data-testid="stSelectbox"] [data-baseweb="menu"], .stSelectbox [data-baseweb="menu"]{
-  background:rgba(15,23,42,1)!important; border:1px solid #4A5568!important; border-radius:12px!important;
-  box-shadow:0 20px 40px rgba(0,0,0,.4)!important; backdrop-filter:blur(16px)!important; z-index:9999!important; margin-top:4px!important;
+/* Enhanced Selectbox */
+.stSelectbox div[data-baseweb="select"] {
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--border-primary) !important;
+  border-radius: 12px !important;
+  transition: var(--transition-smooth) !important;
 }
-div[data-testid="stSelectbox"] [data-baseweb="menu"] div[role="option"], .stSelectbox [data-baseweb="menu"] div[role="option"]{
-  background:transparent!important; color:#2D3748!important; font-weight:500!important; padding:12px 16px!important;
-  border-radius:8px!important; margin:4px 8px!important; transition:all .2s ease-in-out!important;
+
+.stSelectbox div[data-baseweb="select"]:hover {
+  border-color: var(--primary-light) !important;
 }
+
+.stSelectbox div[data-baseweb="select"] input { 
+  color: var(--text-primary) !important; 
+  font-weight: 500 !important;
+}
+
+/* Enhanced & Corrected Dropdown Menu */
+
+/* Main dropdown container */
+div[data-testid="stSelectbox"] [data-baseweb="menu"],
+.stSelectbox [data-baseweb="menu"] {
+background: rgba(15, 23, 42, 1) !important; /* Dark, semi-transparent background */
+border: 1px solid #4A5568 !important; /* A subtle border color */
+border-radius: 12px !important;
+box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+backdrop-filter: blur(16px) !important; /* Corrected syntax for a "frosted glass" effect */
+z-index: 9999 !important;
+margin-top: 4px !important;
+}
+
+/* Individual dropdown options */
+div[data-testid="stSelectbox"] [data-baseweb="menu"] div[role="option"],
+.stSelectbox [data-baseweb="menu"] div[role="option"] {
+background: transparent !important;
+color: #2D3748 !important; /* Changed to a light gray for high contrast */
+font-weight: 500 !important;
+padding: 12px 16px !important;
+border-radius: 8px !important;
+margin: 4px 8px !important;
+transition: all 0.2s ease-in-out !important;
+}
+
+/* Hover state for options */
 div[data-testid="stSelectbox"] [data-baseweb="menu"] div[role="option"]:hover,
-.stSelectbox [data-baseweb="menu"] div[role="option"]:hover{ background:rgba(79,70,229,.2)!important; color:#fff!important; }
+.stSelectbox [data-baseweb="menu"] div[role="option"]:hover {
+background: rgba(79, 70, 229, 0.2) !important;
+color: #FFFFFF !important; /* Becomes bright white on hover */
+}
+
+/* Style for the currently selected option */
 div[data-testid="stSelectbox"] [data-baseweb="menu"] div[aria-selected="true"],
-.stSelectbox [data-baseweb="menu"] div[aria-selected="true"]{ background:#4F46E5!important; color:#fff!important; font-weight:600!important; }
-
-/* Buttons */
-.stButton > button{
-  color:white!important; background:var(--gradient-primary)!important; border:none!important; border-radius:12px!important;
-  padding:12px 24px!important; font-weight:600!important; font-size:14px!important; transition:var(--transition-smooth)!important;
-  box-shadow:var(--shadow-sm)!important; position:relative!important; overflow:hidden!important;
+.stSelectbox [data-baseweb="menu"] div[aria-selected="true"] {
+  background: #4F46E5 !important; /* Using a solid color from your hover effect */
+  color: white !important;
+  font-weight: 600 !important;
 }
-.stButton > button::before{ content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent); transition:var(--transition-smooth); }
-.stButton > button:hover{ transform:translateY(-1px)!important; box-shadow:var(--shadow-md)!important; filter:brightness(1.1)!important; }
-.stButton > button:hover::before{ left:100%; }
-.stButton > button:active{ transform:translateY(0)!important; }
-.stButton > button:focus{ outline:none!important; box-shadow:var(--shadow-md),0 0 0 3px rgba(79,70,229,.3)!important; }
 
-/* Secondary button */
-.stButton > button[data-baseweb="button"][kind="secondary"], .stButton > button[kind="secondary"]{
-  background:rgba(51,65,85,.8)!important; border:2px solid var(--border-primary)!important; color:var(--text-primary)!important;
+/* Modern Button System */
+.stButton > button {
+  color: white !important;
+  background: var(--gradient-primary) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  transition: var(--transition-smooth) !important;
+  box-shadow: var(--shadow-sm) !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
-.stButton > button[kind="secondary"]:hover{ background:rgba(79,70,229,.2)!important; border-color:var(--primary)!important; }
 
-/* Sidebar look (we'll toggle visibility via extra CSS below) */
+.stButton > button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: var(--transition-smooth);
+}
+
+.stButton > button:hover { 
+  transform: translateY(-1px) !important;
+  box-shadow: var(--shadow-md) !important;
+  filter: brightness(1.1) !important;
+}
+
+.stButton > button:hover::before {
+  left: 100%;
+}
+
+.stButton > button:active { 
+  transform: translateY(0) !important;
+}
+
+.stButton > button:focus { 
+  outline: none !important;
+  box-shadow: var(--shadow-md), 0 0 0 3px rgba(79, 70, 229, 0.3) !important;
+}
+
+/* Secondary Button Variant */
+.stButton > button[data-baseweb="button"][kind="secondary"],
+.stButton > button[kind="secondary"] {
+  background: rgba(51, 65, 85, 0.8) !important;
+  border: 2px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.stButton > button[kind="secondary"]:hover {
+  background: rgba(79, 70, 229, 0.2) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Enhanced Sidebar */
 [data-testid="stSidebar"]{
-  background:var(--gradient-card)!important; border-right:1px solid var(--border-primary)!important; backdrop-filter:blur(12px)!important;
+  background: var(--gradient-card) !important;
+  border-right: 1px solid var(--border-primary) !important;
+  backdrop-filter: blur(12px) !important;
 }
-.sidebar-logo{ text-align:center; padding:16px 0 20px 0; border-bottom:1px solid var(--border-secondary); margin-bottom:16px; }
-.sidebar-logo h2{ margin:0; color:var(--text-accent); font-weight:800; font-size:20px; font-family:'Space Grotesk',sans-serif; }
 
-/* HIDE Streamlit's built-in multipage nav forever */
-[data-testid="stSidebarNav"]{ display:none!important; }
+.sidebar-logo{ 
+  text-align: center; 
+  padding: 16px 0 20px 0; 
+  border-bottom: 1px solid var(--border-secondary); 
+  margin-bottom: 16px;
+}
 
-/* Grids */
-.dashboard-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin:20px 0; }
-.feature-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+.sidebar-logo h2{ 
+  margin: 0; 
+  color: var(--text-accent); 
+  font-weight: 800; 
+  font-size: 20px;
+  font-family: 'Space Grotesk', sans-serif;
+}
 
-/* KPI */
-.kpi-card{ background:var(--gradient-card); border:1px solid var(--border-primary); border-radius:16px; padding:20px; text-align:center; transition:var(--transition-smooth); position:relative; overflow:hidden; }
-.kpi-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gradient-primary); }
-.kpi-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
-.kpi-value{ font-size:32px; font-weight:800; background:var(--gradient-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin:8px 0; }
-.kpi-label{ color:var(--text-secondary); font-size:13px; font-weight:500; text-transform:uppercase; letter-spacing:.5px; }
+/* Enhanced Grids */
+.dashboard-grid{ 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+  gap: 16px; 
+  margin: 20px 0;
+}
 
-/* Preview */
-.preview-viewport{ background:rgba(15,23,42,.8); border-radius:16px; padding:16px; border:1px solid var(--border-primary); backdrop-filter:blur(12px); box-shadow:var(--shadow-md); margin:0 auto; max-width:900px; }
-.preview-scale{ width:794px; height:1123px; transform-origin:top center; }
-.pdf{ width:794px; min-height:1123px; background:#fff; color:#111; border-radius:12px; box-shadow:var(--shadow-lg); padding:28px 36px; overflow:auto; }
+.feature-grid{ 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+  gap: 16px;
+}
 
-/* Expander */
-[data-testid="stExpander"]{ background:var(--gradient-card)!important; border:1px solid var(--border-primary)!important; border-radius:12px!important; backdrop-filter:blur(12px)!important; }
+/* KPI Cards Enhancement */
+.kpi-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
 
-/* Footer */
-.site-info{ margin-top:32px; color:var(--text-muted); text-align:center; font-size:13px; border-top:1px solid var(--border-secondary); padding-top:20px; font-weight:500; }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-primary);
+}
 
-/* Messages */
-.stSpinner{ color:var(--primary)!important; }
-.stSuccess,.stWarning,.stError,.stInfo{ border-radius:12px!important; border:none!important; backdrop-filter:blur(12px)!important; }
-.stSuccess{ background:rgba(16,185,129,.15)!important; color:#10b981!important; }
-.stWarning{ background:rgba(245,158,11,.15)!important; color:#f59e0b!important; }
-.stError{ background:rgba(239,68,68,.15)!important; color:#ef4444!important; }
-.stInfo{ background:rgba(6,182,212,.15)!important; color:#06b6d4!important; }
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
 
-/* Responsive */
-@media (max-width:768px){ .site-title h1{font-size:36px;} .dashboard-grid{grid-template-columns:repeat(2,1fr);} .feature-grid{grid-template-columns:1fr;} }
-@media (max-width:480px){ .dashboard-grid{grid-template-columns:1fr;} .site-title{padding:16px 0;} .site-title h1{font-size:28px;} }
+.kpi-value {
+  font-size: 32px;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 8px 0;
+}
+
+.kpi-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Preview Viewport Enhancement */
+.preview-viewport{ 
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--border-primary);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  margin: 0 auto;
+  max-width: 900px;
+}
+
+.preview-scale{ 
+  width: 794px; 
+  height: 1123px; 
+  transform-origin: top center;
+}
+
+.pdf{ 
+  width: 794px; 
+  min-height: 1123px; 
+  background: #ffffff; 
+  color: #111111; 
+  border-radius: 12px; 
+  box-shadow: var(--shadow-lg); 
+  padding: 28px 36px; 
+  overflow: auto;
+}
+
+/* Enhanced Expander */
+[data-testid="stExpander"] {
+  background: var(--gradient-card) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Enhanced Footer */
+.site-info{ 
+  margin-top: 32px; 
+  color: var(--text-muted); 
+  text-align: center; 
+  font-size: 13px; 
+  border-top: 1px solid var(--border-secondary); 
+  padding-top: 20px;
+  font-weight: 500;
+}
+
+/* Loading States */
+.stSpinner {
+  color: var(--primary) !important;
+}
+
+/* Success/Warning/Error Messages */
+.stSuccess, .stWarning, .stError, .stInfo {
+  border-radius: 12px !important;
+  border: none !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.stSuccess {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+}
+
+.stWarning {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+}
+
+.stError {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+}
+
+.stInfo {
+  background: rgba(6, 182, 212, 0.15) !important;
+  color: #06b6d4 !important;
+}
+
+/* Feature Button Enhancement */
+.feature-button {
+  background: var(--gradient-card) !important;
+  border: 2px solid var(--border-primary) !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+  transition: var(--transition-smooth) !important;
+  text-align: left !important;
+  min-height: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.feature-button:hover {
+  border-color: var(--primary) !important;
+  background: rgba(79, 70, 229, 0.1) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .site-title h1 {
+    font-size: 36px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .site-title {
+    padding: 16px 0;
+  }
+  
+  .site-title h1 {
+    font-size: 28px;
+  }
+}
 
 /* Dark theme consistency */
-.css-1d391kg, .css-1y4p8pa{ background-color:transparent!important; }
+.css-1d391kg, .css-1y4p8pa {
+  background-color: transparent !important;
+}
 </style>
 """,
     unsafe_allow_html=True,
 )
-
-# Helpers to toggle sidebar visibility at runtime
-def _hide_sidebar_css():
-    st.markdown(
-        """
-        <style>
-        [data-testid="stSidebar"] { display: none !important; }
-        /* also hide any nav area just in case */
-        [data-testid="stSidebarNav"] { display: none !important; }
-        /* reclaim space */
-        .block-container { padding-left: 1rem !important; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-def _show_sidebar_css():
-    st.markdown(
-        """
-        <style>
-        [data-testid="stSidebar"] { display: block !important; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 # ==================== Session State ====================
@@ -269,6 +623,7 @@ def current_role() -> str:
     return ui.get("role", "guest" if not st.session_state.get("authenticated") else "user")
 
 def gate(feature_name: str) -> bool:
+    # Guest can access Dashboard, Templates, Builder.
     role = current_role()
     if role == "guest":
         return feature_name in {"Dashboard", "Templates", "Builder"}
@@ -276,6 +631,40 @@ def gate(feature_name: str) -> bool:
 
 
 # ==================== Logos ====================
+def _find_logo():
+    from pathlib import Path as _Path
+    candidates = [
+        _Path("CareerCanvasAI-removebg-preview.png"),
+        _Path("assets/CareerCanvasAI-removebg-preview.png"),
+        _Path("static/CareerCanvasAI-removebg-preview.png"),
+        _Path("images/CareerCanvasAI-removebg-preview.png"),
+        _Path(__file__).with_name("CareerCanvasAI-removebg-preview.png"),
+        _Path(__file__).parent / "assets/CareerCanvasAI-removebg-preview.png",
+        _Path(__file__).parent / "static/CareerCanvasAI-removebg-preview.png",
+    ]
+    for p in candidates:
+        try:
+            if p.exists():
+                return str(p)
+        except Exception:
+            continue
+    return None
+
+def show_logo(width: int = 46):
+    try:
+        p = _find_logo()
+        if p:
+            st.image(p, width=width)
+        else:
+            st.markdown(
+                '<div style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:10px;background:#4f46e5;color:#fff;font-weight:800;">CC</div>',
+                unsafe_allow_html=True,
+            )
+    except Exception:
+        st.markdown(
+            '<div style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:10px;background:#4f46e5;color:#fff;font-weight:800;">CC</div>',
+            unsafe_allow_html=True,
+        )
 GOOGLE_SVG = """
 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
   <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.4 29.3 36 24 36 16.8 36 11 30.2 11 23S16.8 10 24 10c3.6 0 6.9 1.4 9.4 3.6l5.7-5.7C35.4 3.3 29.9 1 24 1 11.8 1 2 10.8 2 23s9.8 22 22 22c11 0 21-8 21-22 0-1.4-.1-2.8-.4-4.5z"/>
@@ -294,16 +683,24 @@ LINKEDIN_SVG = """
 
 # ==================== PDF helpers ====================
 def html_to_pdf_bytes(html: str) -> bytes | None:
+    # Try pdfkit (wkhtmltopdf)
+    try:
+        import pdfkit  # type: ignore
+        return pdfkit.from_string(html, False)
+    except Exception:
+        pass
+    # Try WeasyPrint
+    try:
+        from weasyprint import HTML
+        return HTML(string=html).write_pdf()
+    except Exception:
+        pass
+    # Try xhtml2pdf
     try:
         from xhtml2pdf import pisa
         buf = io.BytesIO()
         pisa.CreatePDF(src=html, dest=buf)
         return buf.getvalue()
-    except Exception:
-        pass
-    try:
-        from weasyprint import HTML
-        return HTML(string=html).write_pdf()
     except Exception:
         pass
     return None
@@ -329,24 +726,22 @@ def text_to_pdf_bytes(title: str, text: str) -> bytes:
 
 
 # ==================== Auth Landing ====================
-def render_auth_landing():
-    # Hide sidebar on login page
-    _hide_sidebar_css()
+def _ensure_state():
+    st.session_state.setdefault("auth_tab", "signin")
+    st.session_state.setdefault("current_page", "Dashboard")
+    st.session_state.setdefault("authenticated", False)
+    st.session_state.setdefault("user_info", {})
 
-    st.markdown(
-        """
-<div class="site-title">
-  <div style="font-size:40px">🎨</div>
-  <div style="text-align:center">
-    <h1>CareerCanvas AI</h1>
-    <small>Career Assistant</small>
-  </div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
+def render_auth_landing():
+    _ensure_state()
 
     st.markdown('<div class="card" style="max-width:760px;margin:0 auto;">', unsafe_allow_html=True)
+    top = st.columns([1, 8])
+    with top[0]:
+        show_logo(46)
+    with top[1]:
+        st.markdown("## CareerCanvas  AI")
+        st.caption("Career Assistant")
 
     c1, c2 = st.columns(2)
     with c1:
@@ -419,16 +814,23 @@ def render_auth_landing():
                         st.error(msg or "Could not create account.")
 
     st.markdown('</div>', unsafe_allow_html=True)
-    _render_footer()  # Footer with Privacy/Terms/Contact links
+
+    st.markdown(
+        f"""
+<div class="site-info">
+  © {datetime.now().year} CareerCanvas AI — Build ATS-friendly resumes, analyze your CV, and prepare for interviews with AI.
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 # ==================== Sidebar & Navigation ====================
 def render_app_sidebar():
-    # Ensure sidebar is visible after login
-    _show_sidebar_css()
-
     with st.sidebar:
-        st.markdown('<div class="sidebar-logo"><h2>🎨 CareerCanvas AI</h2></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-logo">', unsafe_allow_html=True)
+        show_logo(46)
+        st.markdown('<h2 style="margin-top:8px;">CareerCanvas  AI</h2></div>', unsafe_allow_html=True)
 
         ui = st.session_state.get("user_info") or {}
         if ui:
@@ -502,7 +904,7 @@ def _close_template_modal():
 # ==================== Pages ====================
 def page_dashboard():
     st.markdown(
-        '<div class="card">Welcome to CareerCanvas AI. Use the sidebar to explore Templates, Builder, and Analyzer.</div>',
+        '<div class="card">Welcome to CareerCanvas  AI. Use the sidebar to explore Templates, Builder, and Analyzer.</div>',
         unsafe_allow_html=True
     )
 
@@ -538,18 +940,18 @@ def _kpi(col, v, label, icon):
         )
 
 
+# ==================== Pages ====================
 def page_templates():
     st.header("📄 Professional Templates")
 
+    # role filter (clear preview when role changes)
     roles = ["technical", "non-technical"]
     sel = st.selectbox("Filter by role", roles, index=0)
+    if st.session_state.get("templates_role") != sel:
+        st.session_state.templates_role = sel
+        st.session_state.preview_template_id = None
 
-    if st.session_state.get("last_selected_role") != sel:
-        st.session_state.last_selected_role = sel
-        if "preview_template_id" in st.session_state:
-            del st.session_state["preview_template_id"]
-
-    templates = [t for t in get_all_templates() if t["role_category"] == sel]
+    templates = [t for t in TEMPLATES if t["role_category"] == sel]
     if not templates:
         st.info("No templates for this role.")
         return
@@ -568,24 +970,42 @@ def page_templates():
             cprev, cuse = st.columns(2)
             with cprev:
                 if st.button("👁 Preview", key=f"prev_{template['id']}", use_container_width=True):
-                    st.session_state["preview_template_id"] = template["id"]
+                    st.session_state.preview_template_id = template["id"]
+                    st.session_state["scroll_to_preview"] = True
             with cuse:
                 disabled = not gate("Builder")
                 if st.button("Use", key=f"use_{template['id']}", use_container_width=True, disabled=disabled):
                     if disabled:
                         st.warning("Sign in to use the builder.")
                     else:
-                        st.session_state["selected_template"] = template["id"]
-                        st.session_state["builder_template_html"] = template["html"]
-                        st.session_state["current_page"] = "Builder"
+                        st.session_state.selected_template = template["id"]
+                        st.session_state.builder_template_html = template["html"]
+                        st.session_state.current_page = "Builder"
                         st.rerun()
 
+    # Anchor just above preview block for smooth scrolling
+    components.html('<div id="preview_block"></div>', height=0)
+
+    # single inline preview block below the role subcontainer
     preview_tid = st.session_state.get("preview_template_id")
     if preview_tid:
         template = get_template_by_id(preview_tid)
         if template:
             st.markdown("### Preview")
-            components.html(template["html"], height=1600, scrolling=True)
+            # Smooth scroll into view if just clicked Preview
+            if st.session_state.get("scroll_to_preview"):
+                components.html(
+                    """
+<script>
+  document.getElementById("preview_block")?.scrollIntoView({behavior:"smooth", block:"start"});
+</script>
+""",
+                    height=0,
+                )
+                st.session_state["scroll_to_preview"] = False
+            # Render template HTML at a sensible height
+            components.html(template["html"], height=900, scrolling=True)
+
 
 
 def page_builder():
@@ -596,6 +1016,7 @@ def page_builder():
         st.info("Pick a template on the Templates page.")
         return
 
+    # Render the entire builder UI first
     try:
         create_resume_builder_interface()
     except Exception as e:
@@ -604,6 +1025,7 @@ def page_builder():
     st.markdown("---")
     st.markdown("#### Actions")
 
+    # Actions row at the bottom
     ctrl = st.columns([1, 1, 1, 4])
     with ctrl[0]:
         if st.button("⬇️ Download PDF", use_container_width=True, key="download_pdf_btn"):
@@ -639,11 +1061,13 @@ def page_builder():
             st.success("Builder reset.")
             st.rerun()
 
+    # NEW: quick switch back to templates
     with ctrl[2]:
         if st.button("🎨 Choose another template", use_container_width=True, key="choose_other_template_btn"):
             st.session_state.preview_template_id = None
             st.session_state.current_page = "Templates"
             st.rerun()
+
 
 
 def page_analyzer():
@@ -701,13 +1125,18 @@ def page_career_guide():
             with st.spinner("Thinking…"):
                 advisor = CareerAdvisor()
                 try:
-                    answer_md = advisor.ask(q)
+                    answer_md = advisor.ask(q)   # STRICT — live LLM only
                     st.markdown("### 💬 AI Advice")
                     st.markdown(answer_md, unsafe_allow_html=False)
                 except Exception as e:
-                    st.error("LLM call failed. Verify OpenRouter/HF credentials and model names.")
+                    st.error(
+                        "LLM call failed. Verify OpenRouter/HF credentials and model names in your environment. "
+                        "See detailed error below."
+                    )
                     st.exception(e)
 
+
+# ==================== Interview Prep ====================
 
 def page_interview_prep():
     if not gate("Interview Prep"):
@@ -725,21 +1154,24 @@ def page_interview_prep():
         with st.spinner("Generating your personalized interview guide…"):
             advisor = CareerAdvisor()
             try:
+                # 1) Generate guide
                 if _is_technical_role(role):
                     guide_md = advisor.interview_prep_dsa(role, seniority, company_type)
                 else:
                     guide_md = advisor.interview_prep_general(role, seniority, company_type)
 
+                # Normalize underline headings to # style to avoid literal ===== lines
+                guide_md = _normalize_markdown_headings(guide_md)
                 st.markdown("### 📋 Your Interview Guide (AI-generated)")
-                # Render as Markdown (fixes the “**...** =====” formatting)
-                with st.container():
-                    st.markdown(guide_md, unsafe_allow_html=False)
+                st.markdown(guide_md, unsafe_allow_html=False)
 
+                # 2) Stage-wise roadmap
                 roadmap_md = advisor.stage_roadmap(role, seniority, company_type)
+                roadmap_md = _normalize_markdown_headings(roadmap_md)
                 st.markdown("### 🛣️ Role Roadmap (AI-generated)")
-                with st.container():
-                    st.markdown(roadmap_md, unsafe_allow_html=False)
+                st.markdown(roadmap_md, unsafe_allow_html=False)
 
+                # (Optional) Keep download flow only for the interview guide to avoid UI drift
                 pdf_bytes = text_to_pdf_bytes(f"{role} Interview Guide", _strip_md(guide_md))
                 st.download_button(
                     "⬇️ Download Guide (PDF)",
@@ -749,7 +1181,10 @@ def page_interview_prep():
                     use_container_width=True,
                 )
             except Exception as e:
-                st.error("LLM call failed. Verify OpenRouter/HF credentials and model names.")
+                st.error(
+                    "LLM call failed. Verify OpenRouter/HF credentials and model names in your environment. "
+                    "See detailed error below."
+                )
                 st.exception(e)
 
 def _is_technical_role(role: str) -> bool:
@@ -765,152 +1200,55 @@ def _strip_md(md: str) -> str:
     for line in (md or "").splitlines():
         line = line.replace("**", "")
         if line.startswith("#"):
-            line = line.strip("# ").upper()
+            line = line.lstrip("# ").upper()
         line = line.replace("•", "- ")
         lines.append(line)
     return "\n".join(lines)
 
+def _normalize_markdown_headings(md: str) -> str:
+    # Convert patterns like "Title\n=====..." into "### Title"
+    lines = (md or "").splitlines()
+    output = []
+    i = 0
+    while i < len(lines):
+        line = lines[i].rstrip()
+        if i + 1 < len(lines):
+            underline = lines[i + 1].strip()
+            if set(underline) <= set("=") and len(underline) >= 3:
+                output.append(f"### {line.strip('* ').strip()}")
+                i += 2
+                continue
+            if set(underline) <= set("-") and len(underline) >= 3:
+                output.append(f"### {line.strip('* ').strip()}")
+                i += 2
+                continue
+        # Convert bold heading style like **Title** to ## style
+        if line.startswith("**") and line.endswith("**") and len(line) > 4:
+            output.append(f"### {line.strip('* ')}")
+        else:
+            output.append(line)
+        i += 1
+    return "\n".join(output)
 
-
-# ==================== Footer Pages (internal) ====================
-def page_privacy():
-    st.header("🔒 Privacy Policy")
-    st.markdown("""
-CareerCanvas AI respects your privacy.
-
-**What we collect**
-- Account data you provide (name, email).
-- Uploaded documents (resumes) for the purpose of parsing and analysis.
-- Product usage events (for improving the app).
-
-**How we use it**
-- To generate and format resumes you request.
-- To provide AI insights and interview preparation.
-- To secure logins via OAuth (Google/LinkedIn).
-
-**Retention**
-- Uploaded files are processed temporarily and not stored permanently unless you explicitly save/export.
-- You may request deletion at any time via **support@careercanvas.ai**.
-
-**Third-parties**
-- OAuth providers (Google/LinkedIn) for authentication.
-- LLM API providers (e.g., OpenRouter) to generate text based on your prompts.
-
-**Your choices**
-- You can use Guest mode with limited functionality.
-- You can export or delete your generated content anytime.
-
-If you have questions, contact **support@careercanvas.ai**.
-""")
-
-
-def page_terms():
-    st.header("📜 Terms of Service")
-    st.markdown("""
-By using CareerCanvas AI, you agree to:
-
-**Acceptable use**
-- Use the platform only for lawful, professional purposes.
-- Do not upload content that is illegal, abusive, or infringes on others’ rights.
-
-**Intellectual property**
-- You own the content you upload and generate.
-- Template designs and the app UI remain property of CareerCanvas AI.
-
-**No warranties**
-- The service is provided “as is,” without guarantees of accuracy or fitness for a particular purpose.
-
-**Liability**
-- We are not liable for indirect or consequential damages arising from use of the service.
-
-**Termination**
-- We may suspend access for abuse, security concerns, or violations of these terms.
-
-If you have questions about these terms, contact **support@careercanvas.ai**.
-""")
-
-
-def page_contact():
-    st.header("📧 Contact Us")
-    st.markdown("""
-We’d love to hear from you:
-
-- Email: **support@careercanvas.ai**
-- GitHub: [CareerCanvas AI Repository](https://github.com/your-username/careercanvas-ai)
-- LinkedIn: [CareerCanvas AI](https://linkedin.com)
-
-**FAQ**
-- *Do you store my resume?*  
-  We process it for extraction/formatting and do not store permanently unless you save/export.
-- *Can I delete my data?*  
-  Yes. Email **support@careercanvas.ai** and we’ll help promptly.
-""")
-
-
-# ==================== Footer ====================
-def _render_footer():
-    st.markdown(
-        f"""
-<div class="site-info">
-  © {datetime.now().year} CareerCanvas AI — Build ATS-friendly resumes, analyze your CV, and prepare for interviews with AI.<br>
-  <a href="?page=Privacy">Privacy Policy</a> · 
-  <a href="?page=Terms">Terms of Service</a> · 
-  <a href="?page=Contact">Contact</a>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
 
 
 # ==================== Router ====================
 def run():
-    # Respect footer links (?page=Privacy etc.) even pre-auth
-    query_params = st.query_params
-    if "page" in query_params:
-        st.session_state.current_page = query_params["page"]
-
-    footer_pages = {"Privacy": page_privacy, "Terms": page_terms, "Contact": page_contact}
-    if st.session_state.get("current_page") in footer_pages and not st.session_state.get("authenticated"):
-        _hide_sidebar_css()
-        st.markdown(
-            """
-<div class="site-title">
-  <div style="font-size:34px">🎨</div>
-  <div style="text-align:center">
-    <h1 style="font-size:38px">CareerCanvas AI</h1>
-    <small>Career Assistant</small>
-  </div>
-</div>
-""",
-            unsafe_allow_html=True,
-        )
-        footer_pages[st.session_state["current_page"]]()
-        _render_footer()
-        return
-
-    # Auth gate
+    _ensure_state()
     if not st.session_state.get("authenticated"):
         render_auth_landing()
         return
 
-    # Authenticated header
-    st.markdown(
-        """
-<div class="site-title">
-  <div style="font-size:34px">🎨</div>
-  <div style="text-align:center">
-    <h1 style="font-size:38px">CareerCanvas AI</h1>
-    <small>Career Assistant</small>
-  </div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
+    # Header with logo
+    cols = st.columns([1, 8])
+    with cols[0]:
+        show_logo(46)
+    with cols[1]:
+        st.markdown("# CareerCanvas AI")
+        st.caption("Career Assistant")
 
-    # Sidebar appears only after login/signup/google/linkedin/guest
     render_app_sidebar()
 
-    # Main pages
     page = st.session_state.get("current_page", "Dashboard")
     if page == "Dashboard":
         page_dashboard()
@@ -924,18 +1262,18 @@ def run():
         page_career_guide()
     elif page == "Interview Prep":
         page_interview_prep()
-    elif page == "Privacy":
-        page_privacy()
-    elif page == "Terms":
-        page_terms()
-    elif page == "Contact":
-        page_contact()
     else:
         page_dashboard()
 
-    _render_footer()
+    st.markdown(
+        f"""
+<div class="site-info">
+  © {datetime.now().year} CareerCanvas AI — Build ATS-friendly resumes, analyze your CV, and prepare for interviews with AI.
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 if __name__ == "__main__":
     run()
-
